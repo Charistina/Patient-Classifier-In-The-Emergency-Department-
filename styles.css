@@ -1,0 +1,117 @@
+/* Base Styles */
+:root {
+  --primary: #ffffff;
+  --secondary: #f0f2f6;
+  --text: #31333f;
+  --accent: #4a90e2;
+  --card: #ffffff;
+  --border: #e0e0e0;
+}
+
+[data-testid="stAppViewContainer"] {
+  background-color: var(--secondary);
+  color: var(--text);
+}
+
+[data-testid="stSidebar"] {
+  background-color: var(--primary) !important;
+  border-right: 1px solid var(--border);
+}
+
+[data-testid="stHeader"] {
+  background-color: var(--primary);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Text Styles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--text) !important;
+}
+
+p,
+div,
+span {
+  color: var(--text) !important;
+}
+
+/* Input Fields */
+.stTextInput > div > div > input,
+.stNumberInput > div > div > input,
+.stSelectbox > div > div > select {
+  background-color: var(--card) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+}
+
+/* Buttons */
+.stButton > button {
+  background-color: var(--accent) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  border: none !important;
+  padding: 10px 24px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease;
+}
+
+.stButton > button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Cards and Containers */
+.stMetric {
+  background-color: var(--card) !important;
+  border-radius: 10px !important;
+  padding: 15px !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+/* Expanders */
+.stExpander {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+}
+
+/* Tabs */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 10px;
+}
+
+.stTabs [data-baseweb="tab"] {
+  background-color: var(--secondary) !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  transition: all 0.3s ease;
+}
+
+.stTabs [aria-selected="true"] {
+  background-color: var(--accent) !important;
+  color: white !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a7bc8;
+}
