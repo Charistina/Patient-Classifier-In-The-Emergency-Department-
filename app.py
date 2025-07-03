@@ -125,7 +125,7 @@ st.markdown(custom_css, unsafe_allow_html=True)
 def load_models():
     try:
         pipeline_path = "outputs/preprocessing_pipeline.pkl"
-        model_path = "outputs/models/xgboost_enhanced_1751447170.pkl"
+        model_path = "outputs/models/xgboost_enhanced_1751566425.pkl"
         
         if os.path.exists(pipeline_path) and os.path.exists(model_path):
             # Mock the original module structure
@@ -440,12 +440,39 @@ if selected == "Triage Predictor":
                 # Convert to string to avoid Arrow serialization issues
                 st.dataframe(new_data.astype(str))
 
+                # ===== FEATURE ENGINEERING TO MATCH UPDATED PIPELINE =====
+                critical_vitals = int(
+                    (sbp < 90 or sbp > 180) or
+                    (dbp < 60 or dbp > 120) or
+                    (hr < 40 or hr > 130) or
+                    (rr < 8 or rr > 30) or
+                    (saturation < 90) or
+                    (bt < 35 or bt > 39)
+                )
+
+                moderate_pain = int(nrs_pain >= 4 and nrs_pain <= 6)
+                severe_pain = int(nrs_pain >= 7)
+
+                mental_severity = 1 if mental_code == 4 else (2 if mental_code in [2, 3] else 0)
+                cardiac_risk = int("chest pain" in chief_complain.lower() or "myocardial" in diagnosis.lower())
+                peds_resp_distress = int(rr > 40 and age < 5)
+
+                # Add engineered features to dataframe
+                new_data["critical_vitals"] = [critical_vitals]
+                new_data["moderate_pain"] = [moderate_pain]
+                new_data["severe_pain"] = [severe_pain]
+                new_data["mental_severity"] = [mental_severity]
+                new_data["cardiac_risk"] = [cardiac_risk]
+                new_data["peds_resp_distress"] = [peds_resp_distress]
+
                 # Convert numeric columns
                 numeric_cols = [
                     'Group', 'Sex', 'Age', 'Patients number per hour', 'Arrival mode',
                     'Injury', 'Mental', 'Pain', 'NRS_pain', 'SBP', 'DBP', 'HR', 'RR',
                     'BT', 'Saturation', 'KTAS_RN', 'Disposition', 'KTAS_expert',
-                    'Error_group', 'Length of stay_min', 'KTAS duration_min', 'mistriage'
+                    'Error_group', 'Length of stay_min', 'KTAS duration_min', 'mistriage',
+                    'critical_vitals', 'moderate_pain', 'severe_pain', 'mental_severity',
+                    'cardiac_risk', 'peds_resp_distress'
                 ]
                 for col in numeric_cols:
                     new_data[col] = pd.to_numeric(new_data[col], errors='coerce')
@@ -461,7 +488,9 @@ if selected == "Triage Predictor":
                     'Injury', 'Chief_complain', 'Mental', 'Pain', 'NRS_pain', 'SBP', 'DBP',
                     'HR', 'RR', 'BT', 'Saturation', 'KTAS_RN', 'Diagnosis in ED', 'Disposition',
                     'KTAS_expert', 'Error_group', 'Length of stay_min', 'KTAS duration_min',
-                    'mistriage', 'Chief_complain_clean', 'Diagnosis_clean'
+                    'mistriage', 'Chief_complain_clean', 'Diagnosis_clean',
+                    'critical_vitals', 'moderate_pain', 'severe_pain', 'mental_severity',
+                    'cardiac_risk', 'peds_resp_distress'
                 ]
                 
                 # Ensure correct column order
@@ -603,7 +632,14 @@ if selected == "Triage Predictor":
                     
                     # Additional clinical guidance
                     if prediction_value in [1, 2]:
-                        st.warning("**❗ Immediate Action Required** - Physician assessment needed immediately")
+                        if st.session_state.get('dark_mode', False):
+                            st.warning("**❗ Immediate Action Required** - Physician assessment needed immediately")
+                        else:
+                            st.markdown("""
+                            <div style='background-color:#fff4e6;color:#c0392b;padding:0.75rem;border-radius:6px;font-weight:bold;'>
+                                ❗ Immediate Action Required - Physician assessment needed immediately
+                            </div>
+                            """, unsafe_allow_html=True)
                     elif prediction_value == 3:
                         st.info("**ℹ️ Priority Assessment** - Nurse evaluation within 20 minutes recommended")
                     else:
