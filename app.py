@@ -216,7 +216,88 @@ def load_models():
         st.error(f"Error loading models: {e}")
         return None, None, None
 
-pipeline, model, model_feature_count = load_models()
+# ===== INITIAL PIPELINE LOAD =====
+pipeline, _, _ = load_models()
+
+# ===== HELPER FUNCTION TO LOAD INDIVIDUAL MODEL =====
+@st.cache_resource
+def load_model(model_path):
+    """Load and sanitize a trained model; return the model instance and its expected feature count.
+
+    Some training pipelines (notably for LightGBM) save a *dict* that wraps the
+    real estimator.  This helper unwraps such dictionaries and tries to pick the
+    first object that exposes a ``predict`` method. If no valid estimator can
+    be found we surface a descriptive Streamlit error so that the UI fails
+    gracefully instead of throwing an attribute-error downstream.
+    """
+    try:
+        raw_obj = joblib.load(model_path)
+
+        # ------------------------------------------------------------------
+        # 1️⃣  Unwrap dictionaries that contain the actual estimator
+        # ------------------------------------------------------------------
+        model = raw_obj
+        if isinstance(raw_obj, dict):
+            # First, look for common keys we used while training
+            for key in ("model", "classifier", "lgbm"):
+                cand = raw_obj.get(key)
+                if cand is not None and hasattr(cand, "predict"):
+                    model = cand
+                    break
+            else:
+                # Fallback: search every value in the dict for something with
+                # a ``predict`` attribute
+                for val in raw_obj.values():
+                    if hasattr(val, "predict"):
+                        model = val
+                        break
+
+        # After sanitising, ensure we indeed have a model-like object
+        if not hasattr(model, "predict"):
+            st.error(
+                f"Loaded object from {os.path.basename(model_path)} is not a valid model with a predict() method."
+            )
+            return None, None
+
+        # ------------------------------------------------------------------
+        # 2️⃣  Determine expected feature count for later dimension checks
+        # ------------------------------------------------------------------
+        model_feature_count = None
+        try:
+            import xgboost as xgb  # noqa: F401
+            if isinstance(model, xgb.Booster):
+                model_feature_count = model.num_features()
+        except Exception:
+            pass
+
+        try:
+            import lightgbm as lgb  # noqa: F401
+            if isinstance(model, lgb.Booster):
+                model_feature_count = model.num_feature()
+        except Exception:
+            pass
+
+        # Generic sklearn attribute
+        if model_feature_count is None and hasattr(model, "n_features_in_"):
+            model_feature_count = model.n_features_in_
+
+        return model, model_feature_count
+
+    except Exception as e:
+        st.error(
+            f"Error loading model from {os.path.basename(model_path)}: {e}"
+        )
+        return None, None
+
+# ===== MODEL PATHS MAPPING =====
+MODEL_PATHS = {
+    "XGBoost": "outputs/models/xgboost_enhanced_1751566425.pkl",
+    "LightGBM": "outputs/models/lgbm_model_1751569133.pkl",
+    "RandomForest": "outputs/models/RandomForest.pkl",
+    "LogisticRegression": "outputs/models/LogisticRegression.pkl",
+    "SVM": "outputs/models/SupportVectorMachine.pkl",
+}
+
 
 # ===== THEME TOGGLE =====
 def theme_toggle():
@@ -239,6 +320,13 @@ with st.sidebar:
     with col2:
         st.write("Toggle Theme")
     
+    # Model selector
+    selected_model = st.selectbox(
+        "Select Model",
+        list(MODEL_PATHS.keys()),
+        index=0
+    )
+
     # Navigation
     selected = option_menu(
         menu_title=None,
@@ -252,6 +340,9 @@ with st.sidebar:
             "nav-link-selected": {"background-color": "#3498db"},
         }
     )
+
+# Load the selected model once based on sidebar choice
+model, model_feature_count = load_model(MODEL_PATHS[selected_model])
 
 # Apply theme
 if st.session_state.get("dark_mode", False):
@@ -708,7 +799,14 @@ if selected == "Triage Predictor":
                             </div>
                             """, unsafe_allow_html=True)
                     elif prediction_value == 3:
-                        st.info("**ℹ️ Priority Assessment** - Nurse evaluation within 20 minutes recommended")
+                        if st.session_state.get('dark_mode', False):
+                            st.info("**ℹ️ Priority Assessment** - Nurse evaluation within 20 minutes recommended")
+                        else:
+                            st.markdown("""
+                            <div style='background-color:#e7f5fe;color:#1c7ed6;padding:0.75rem;border-radius:6px;font-weight:bold;'>
+                                ℹ️ Priority Assessment - Nurse evaluation within 20 minutes recommended
+                            </div>
+                            """, unsafe_allow_html=True)
                     else:
                         if st.session_state.get('dark_mode', False):
                             st.markdown("<div style='background-color:#27ae60;color:#ecf0f1;padding:0.75rem;border-radius:6px;'>✅ Routine Assessment - Standard evaluation process appropriate</div>", unsafe_allow_html=True)
