@@ -81,8 +81,60 @@ custom_css = """
         border: 1px solid #dfe6e9;
         border-radius: 8px;
         padding: 10px;
+        background-color: transparent;
+    }
+
+    /* Pop-up style translucent boxes around each input widget */
+    .stTextInput, .stNumberInput, .stSelectbox, .stSlider, .stDateInput {
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 12px;
+        padding: 1rem !important;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(3px);
     }
     
+    /* Title banner styling */
+    .title-banner {
+        display: flex;
+        align-items: center;
+        background-color: #3498db;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 1.5rem;
+    }
+    .title-banner h1 {
+        color: #f1c40f;
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    .title-banner p {
+        margin: 0;
+        font-size: 1rem;
+    }
+    .title-subtitle {
+        color: #f1c40f !important; /* yellow */
+        /* no outline */
+    }
+    .title-heading {
+        color: #e74c3c !important;
+        font-size: 2.3rem !important;
+        letter-spacing: 2px;
+        margin: 0;
+        text-shadow:
+            -1px -1px 0 #000,
+             1px -1px 0 #000,
+            -1px  1px 0 #000,
+             1px  1px 0 #000;
+        -webkit-text-stroke: 0.5px #000;
+    }
+    .title-icon {
+        font-size: 2.5rem;
+        margin-right: 1rem;
+        color: #ffffff;
+    }
+
     /* Cards for results */
     .triage-card {
         border-radius: 10px;
@@ -221,6 +273,16 @@ if st.session_state.get("dark_mode", False):
         .section-header, h1, h2, h3, h4, h5, h6 {
             color: #ecf0f1 !important;
         }
+        /* Pop-up style boxes for dark mode */
+        .stTextInput, .stNumberInput, .stSelectbox, .stSlider, .stDateInput {
+            background: rgba(52, 73, 94, 0.6);
+            border-radius: 12px;
+            padding: 1rem !important;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            backdrop-filter: blur(3px);
+        }
+
         /* Fix field labels in dark mode */
         label, .stNumberInput label, .stTextInput label, .stSelectbox label {
             color: #ecf0f1 !important;
@@ -260,9 +322,12 @@ else:
 # ===== MAIN CONTENT =====
 if selected == "Triage Predictor":
     st.markdown("""
-    <div class='section-header'>
-        <h1 style='color: #2c3e50;'>Patient Classifier</h1>
-        <p style='color: #7f8c8d;'>Predict ESI/KTAS levels for incoming patients</p>
+    <div class='title-banner'>
+        <span class='title-icon'>🚑</span>
+        <div>
+            <h1 class='title-heading'>PATIENT CLASSIFIER</h1>
+            <p class='title-subtitle'>Predict KTAS levels for incoming patients</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -270,7 +335,7 @@ if selected == "Triage Predictor":
         st.markdown(
             f"""
             <div style='background-color: {'#23272e' if st.session_state.get('dark_mode', False) else '#f1f9fe'}; padding: 1.5rem; border-radius: 10px; color: {'#ecf0f1' if st.session_state.get('dark_mode', False) else '#2c3e50'};'>
-                This tool uses machine learning to predict the appropriate triage level (ESI/KTAS) 
+                This tool uses machine learning to predict the appropriate triage level (KTAS) 
                 for emergency department patients based on their clinical presentation and vital signs.<br><br>
                 <b>Triage Levels:</b><br>
                 <ul>
@@ -435,10 +500,12 @@ if selected == "Triage Predictor":
                     "Diagnosis_clean": [diagnosis]
                 })
 
-                # Debug: Show the prepared data
-                st.write("Prepared input data:")
-                # Convert to string to avoid Arrow serialization issues
-                st.dataframe(new_data.astype(str))
+                # Ensure missing values are handled and dtypes are Arrow-friendly
+                new_data = new_data.fillna(0)
+
+                # Debug: Show the prepared data (now with consistent dtypes)
+                st.write("Prepared input data (showing first row as JSON):")
+                st.json(new_data.head().to_dict(orient='records'))
 
                 # ===== FEATURE ENGINEERING TO MATCH UPDATED PIPELINE =====
                 critical_vitals = int(
@@ -474,8 +541,8 @@ if selected == "Triage Predictor":
                     'critical_vitals', 'moderate_pain', 'severe_pain', 'mental_severity',
                     'cardiac_risk', 'peds_resp_distress'
                 ]
-                for col in numeric_cols:
-                    new_data[col] = pd.to_numeric(new_data[col], errors='coerce')
+                # Coerce to numeric (float64) then cast to concrete NumPy dtypes
+                new_data[numeric_cols] = new_data[numeric_cols].apply(pd.to_numeric, errors='coerce').astype({col: ('float64' if col == 'BT' else 'int64') for col in numeric_cols})
 
                 # Convert text columns
                 text_cols = ['Chief_complain', 'Chief_complain_clean', 'Diagnosis in ED', 'Diagnosis_clean']
@@ -496,9 +563,9 @@ if selected == "Triage Predictor":
                 # Ensure correct column order
                 new_data = new_data[required_columns]
 
-                # Debug: Show processed data
-                st.write("Processed data with correct types:")
-                st.write(new_data.dtypes)
+                # Debug: Show processed dtype info
+                st.write("Column dtypes after coercion (dict):")
+                st.json(new_data.dtypes.astype(str).to_dict())
 
                 # Transform the data using pipeline
                 try:
@@ -652,9 +719,9 @@ if selected == "Triage Predictor":
                 st.error(f"An error occurred during prediction: {str(e)}")
                 st.write("Debug info - Data being sent to pipeline:")
                 # Convert to string to avoid Arrow serialization issues
-                st.write(new_data.astype(str))
-                st.write("Data types:")
-                st.write(new_data.dtypes.astype(str))
+                st.json(new_data.astype(str).to_dict(orient='records'))
+                st.write("Data types (dict):")
+                st.json(new_data.dtypes.astype(str).to_dict())
 
 elif selected == "About":
     bg_color = '#1a2026' if st.session_state.get('dark_mode', False) else '#e8f4fc'
@@ -671,7 +738,7 @@ elif selected == "About":
         <h3 style='color: {'#ecf0f1' if st.session_state.get('dark_mode', False) else '#2c3e50'};'>in the Emergency Department</h3>
         <div style='margin-top: 2rem;'>
             <p>This application uses machine learning to assist emergency department staff in classifying 
-            patients according to the Emergency Severity Index (ESI) or Korean Triage and Acuity 
+            patients according to the Korean Triage and Acuity 
             Scale (KTAS) standards.</p>
             <h4 style='color: #3498db; margin-top: 1.5rem;'>How It Works</h4>
             <ul>
