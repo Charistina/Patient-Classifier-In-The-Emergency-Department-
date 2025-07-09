@@ -846,16 +846,16 @@ elif selected == "About":
             </ul>
             <h4 style='color: #3498db; margin-top: 1.5rem;'>Model Details</h4>
             <ul>
-                <li><strong>Algorithm:</strong> XGBoost Classifier</li>
+                <li><strong>Algorithm:</strong> XGBoost Classifier, LightGBM, Random Forest, Logistic Regression, SVM (Recommended to use LightGBM or XGBoost for better classification)</li>
                 <li><strong>Training Data:</strong> Kaggle</li>
             </ul>
             <div style='margin-top: 2rem; padding: 1.5rem; background-color: {bg_color}; border-radius: 8px;'>
                 <h5 style='color: {'#ecf0f1' if st.session_state.get('dark_mode', False) else '#2c3e50'};'>Batch - 17</h5>
                 <p>Project created by:</p>
                 <ul>
-                    <li>A. Sandhya [22RH1A6611]</li>
-                    <li>A. Silvia Jasmine [22RH1A6612]</li>
-                    <li>Christina Charis [22RH1A6637]</li>
+                    <li>A. Sandhya</li>
+                    <li>A. Silvia Jasmine</li>
+                    <li>Christina Charis</li>
                 </ul>
             </div>
         </div>
