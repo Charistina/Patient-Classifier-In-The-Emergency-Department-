@@ -1,0 +1,10 @@
+.venv/
+documentation/
+outputs/
+data/
+__pycache__/
+*.py[cod]
+
+#system files
+*.DS_Store
+Thumbs.db
