@@ -846,7 +846,7 @@ elif selected == "About":
             </ul>
             <h4 style='color: #3498db; margin-top: 1.5rem;'>Model Details</h4>
             <ul>
-                <li><strong>Algorithm:</strong> XGBoost Classifier, LightGBM, Random Forest, Logistic Regression, SVM (Recommended to use LightGBM or XGBoost for better classification)</li>
+                <li><strong>Algorithm:</strong> XGBoost Classifier, LightGBM, Random Forest, Logistic Regression, SVM <br>(Recommended to use LightGBM or XGBoost for better classification)</li>
                 <li><strong>Training Data:</strong> Kaggle</li>
             </ul>
             <div style='margin-top: 2rem; padding: 1.5rem; background-color: {bg_color}; border-radius: 8px;'>
