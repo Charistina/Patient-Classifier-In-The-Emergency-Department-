@@ -1,6 +1,12 @@
 .venv/
 documentation/
-outputs/
+
+# Ignore everything in outputs except models
+outputs/*
+!outputs/models/
+!outputs/models/*.pkl
+
+
 data/
 __pycache__/
 *.py[cod]
