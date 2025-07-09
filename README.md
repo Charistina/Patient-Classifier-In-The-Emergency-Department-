@@ -2,7 +2,7 @@ Machine Learning Based Patient Classifier in the Emergency Department
 
 This project is a machine learning-based triage support system designed to classify incoming patients in emergency departments (ED) according to the Korean Triage and Acuity Scale (KTAS). It predicts the appropriate KTAS level based on clinical presentation, vital signs, and other patient details.
 
-Table of Contents
+Table of Contents:
 
 - Project Overview
 - Features
@@ -14,10 +14,10 @@ Table of Contents
 - Team Members
 - License
 
-Project Overview
+Project Overview:
 Emergency departments often experience patient overcrowding and must quickly identify the severity of a patient's condition. The ED Patient Classifier assists medical staff by predicting the KTAS level using supervised machine learning models trained on real emergency visit data.
 
-Features
+Features:
 
 - Predicts KTAS levels (1 to 5) for patients
 - Built-in data preprocessing and feature engineering
@@ -35,7 +35,7 @@ The system follows a modular architecture with the following components:
 - evaluate_all_models.py � Evaluation script comparing model performance
 - plot_ktas_distribution.py � Script to visualize label distribution before and after SMOTE
 
-Getting Started
+Getting Started:
 
 1. Clone the repository
    git clone https://github.com/Charistina/Patient-Classifier-In-The-Emergency-Department-
@@ -44,8 +44,7 @@ Getting Started
 2. Create a virtual environment
    python -m venv venv
    source venv/bin/activate
-
-# On Windows: venv\Scripts\activate
+   On Windows: venv\Scripts\activate
 
 3. Install dependencies
    pip install -r requirements.txt
@@ -74,7 +73,7 @@ Once the app is running:
 4. View the predicted KTAS level along with an interpretation.
    The app supports both light and dark themes and includes explanations for each KTAS level.
 
-Model Details
+Model Details:
 The following models were evaluated for performance:
 
 - XGBoost
@@ -93,12 +92,12 @@ This project uses the Emergency Service Triage Application dataset from Kaggle.
 - License: Refer to Kaggle page for licensing details
   Note: The dataset is not included in this repository. You must manually download and place it in the data/ directory as data.csv.
 
-Team Members
+Team Members:
 This project was completed as a team effort. Team members are listed below:
 
 - Christina Charis R
 - Annaparthi Sandhya
 - A. Silvia Jasmine
 
-License
+License:
 This project is for academic purposes only. Please refer to the dataset�s original license for usage and redistribution rights.
